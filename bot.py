@@ -7,12 +7,12 @@ FOOTBALL_API_KEY = os.getenv("FOOTBALL_API_KEY")
 FACEBOOK_PAGE_ID = os.getenv("FACEBOOK_PAGE_ID")
 FACEBOOK_ACCESS_TOKEN = os.getenv("FACEBOOK_ACCESS_TOKEN")
 
+# Configurar uma versão válida da Graph API nas variáveis de ambiente.
+FACEBOOK_API_VERSION = os.getenv("FACEBOOK_API_VERSION")
+
 API_URL = "https://v3.football.api-sports.io/fixtures"
 
-# Intervalo entre verificações: 60 segundos
-INTERVALO = 60
-
-# Evita publicar repetidamente o mesmo acontecimento
+INTERVALO = 120
 publicados = set()
 
 
@@ -32,7 +32,8 @@ def obter_jogos():
 
 def publicar_facebook(mensagem):
     url = (
-        f"https://graph.facebook.com/vXX.X/"
+        f"https://graph.facebook.com/"
+        f"{FACEBOOK_API_VERSION}/"
         f"{FACEBOOK_PAGE_ID}/feed"
     )
 
@@ -51,11 +52,16 @@ def publicar_facebook(mensagem):
 
 def executar():
     if not FOOTBALL_API_KEY:
-        raise RuntimeError("Falta configurar FOOTBALL_API_KEY.")
+        raise RuntimeError("Falta FOOTBALL_API_KEY.")
 
     if not FACEBOOK_PAGE_ID or not FACEBOOK_ACCESS_TOKEN:
         raise RuntimeError(
             "Faltam as credenciais da página do Facebook."
+        )
+
+    if not FACEBOOK_API_VERSION:
+        raise RuntimeError(
+            "Configura FACEBOOK_API_VERSION com uma versão suportada."
         )
 
     while True:
@@ -68,7 +74,6 @@ def executar():
                 golos = jogo["goals"]
                 estado = fixture["status"]["short"]
 
-                # Publica apenas jogos em andamento ou terminados
                 if estado not in ("1H", "HT", "2H", "ET", "P", "FT"):
                     continue
 
